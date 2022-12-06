@@ -1,0 +1,130 @@
+import EventEmitter from 'events';
+import { Logger, PlatformAccessory } from 'homebridge';
+import { ResolVBusPlatform } from './platform';
+import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
+import { vBusTemperatureSensor } from './accessory';
+
+import {
+    HeaderSet,
+    HeaderSetConsolidator,
+    Specification,
+    SerialConnection,
+    TcpConnection,
+    Connection,
+} from 'resol-vbus';
+import { stringify } from 'querystring';
+
+export const connectionClassNames = {
+    SerialConnection,
+    TcpConnection,
+};
+
+export class vbusServer extends EventEmitter {
+    public readonly log: Logger;
+    private connection : Connection;
+    private hsc : HeaderSetConsolidator;
+    private specification: Specification;
+    private accessoriesInitialized: boolean = false;
+    private accessories: Map<string, PlatformAccessory> = new  Map<string, PlatformAccessory> ();
+    public readonly id: string;
+
+
+    constructor(
+        public readonly platform: ResolVBusPlatform,
+        config
+        ) {
+        super();
+        this.id = config?.name + ' (' + (config.connectionOptions?.host || config.connectionOptions?.path) + ')'
+        this.log = platform.log;
+        this.log.debug('Starting VBus Server:', this.id);
+
+        this.specification = Specification.getDefaultSpecification();
+
+        const ConnectionClass = connectionClassNames[config.connectionClassName];
+        this.connection = new ConnectionClass(config.connectionOptions);
+
+        this.hsc = new HeaderSetConsolidator({
+            interval: 10 * 1000,
+        });
+        
+        this.connection.on('packet', (packet) => {
+            this.hsc.addHeader(packet);
+        });
+
+        this.hsc.on('headerSet', (headerSet) => { this.CheckHeaderSet(); });
+
+    }
+
+    addAccessory(acc: PlatformAccessory) {
+        this.accessories[acc.UUID] = acc;
+    }
+
+    async launchFinished() {
+        this.log.debug('launchFinished: Starting timer');
+        await this.connection.connect();
+        this.hsc.startTimer();
+    }
+
+    private initializeAccessories(data) {
+        this.log.debug('Initializing accessories for', this.id);
+
+        if (this.id === 'Solar (10.1.1.21)') {
+            this.log.debug('data:', data);
+        }
+
+        data.forEach(val => {
+            if (val.packetFieldSpec?.type?.unit?.unitFamily === 'Temperature') {
+//        this.log.debug('Temperature:', JSON.stringify(val, null, 4));
+//            if (val['packetSpec']['packetFields']['type']['unit']['unitFamily'] === 'Temperature') {
+            
+                this.log.debug('%s: Adding temperature sensor: ', this.id, val.name);
+                new vBusTemperatureSensor(this, {
+                        serverID: this.id,
+                        accessoryID: val.id,
+                        name: val.name,
+                        value: val.rawValue,
+                        type: 'temperatureSensor'
+                    }, {}
+                );
+            } else {
+                this.log.debug('%s: Skipping accessory:', this.id, val.name);
+            }
+
+        });
+        for (const [uuid, acc] of this.accessories) {
+            this.log.info('%s: Removing unused accessory:', this.id, acc.context.device?.name || uuid);
+            this.platform.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [acc]);
+          }
+    }
+
+    getAccessory(uuid: string) : PlatformAccessory | undefined {
+        const acc = this.accessories[uuid];
+        if (acc) {
+            this.accessories.delete(uuid);
+        }
+
+        return acc;
+    }
+
+    private CheckHeaderSet()
+    {
+        const pffh = this.specification.getPacketFieldsForHeaders(this.hsc.getSortedHeaders());
+
+        if (!pffh.length) {
+            this.log.warn('%s: No data from server.', this.id);
+            this.log.debug('raw data:', this.hsc.getSortedHeaders());
+            return;
+        }
+
+        if (!this.accessoriesInitialized) {
+            this.accessoriesInitialized = true;
+            return this.initializeAccessories(pffh);
+        }
+
+        pffh.forEach(val => {
+            if (val.packetFieldSpec?.type?.unit?.unitFamily === 'Temperature') {
+                this.emit(val.id, val.rawValue);
+            }
+        });
+    }
+}
