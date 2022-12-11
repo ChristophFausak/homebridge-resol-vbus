@@ -17,9 +17,6 @@ export class ResolVBusPlatform implements DynamicPlatformPlugin {
   ) {
     this.log.debug('Initializing platform:', this.config.name);
 
-    const sc = /*config['servers'] ||*/ new Map<string, any>();
-
-
     const debug= config.debug === true;
 
     if (!Array.isArray(config.servers)) {

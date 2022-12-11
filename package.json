@@ -2,15 +2,15 @@
   "private": true,
   "displayName": "RESOL VBus",
   "name": "homebridge-resol-vbus",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "description": "Adapter to RESOL VBus based solar and system controllers.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git://github.com/USERNAME/GITHUB_PROJECT_NAME.git"
+    "url": "git://github.com/ChristophFausak/homebridge-resol-vbus.git"
   },
   "bugs": {
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME/issues"
+    "url": "https://github.com/ChristophFausak/homebridge-resol-vbus/issues"
   },
   "engines": {
     "node": ">=14.18.1",

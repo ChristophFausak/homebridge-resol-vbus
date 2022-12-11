@@ -1,0 +1,73 @@
+{
+  "pluginAlias": "ResolVBus",
+  "pluginType": "platform",
+  "singular": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "servers": {
+        "title": "VBus Connections",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "autoDiscover": {
+              "type": "boolean"
+            },
+            "connectionClassName": {
+              "title": "Connection Type",
+              "type": "string",
+              "default": "TcpConnection",
+              "oneOf": [
+                { "title": "TCP", "enum": ["TcpConnection"] },
+                { "title": "Serial", "enum": ["SerialConnection"] }
+              ],
+              "required": true
+            },
+            "connectionOptions": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "title": "Serial device",
+                  "type": "string",
+                  "default": "/dev/ttyACM0",
+                  "condition": {
+                    "functionBody": "return model.servers[arrayIndices].connectionClassName === 'SerialConnection';"
+                  }
+                },
+                "host": {
+                  "title": "Host",
+                  "type": "string",
+                  "condition": {
+                    "functionBody": "return model.servers[arrayIndices].connectionClassName === 'TcpConnection';"
+                  }
+                },
+                "password": {
+                  "title": "Password",
+                  "type": "string",
+                  "condition": {
+                    "functionBody": "return model.servers[arrayIndices].connectionClassName === 'TcpConnection';"
+                  }
+                }
+              },
+              "required": [
+                "path",
+                "host",
+                "password"
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "autoDiscover",
+            "connectionClassName",
+            "connectionOptions"
+          ]
+        }
+      }
+    }
+  }
+}
