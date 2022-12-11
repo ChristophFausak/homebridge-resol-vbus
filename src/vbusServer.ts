@@ -5,14 +5,12 @@ import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { vBusTemperatureSensor } from './accessory';
 
 import {
-    HeaderSet,
     HeaderSetConsolidator,
     Specification,
     SerialConnection,
     TcpConnection,
     Connection,
 } from 'resol-vbus';
-import { stringify } from 'querystring';
 
 export const connectionClassNames = {
     SerialConnection,
@@ -24,17 +22,17 @@ export class vbusServer extends EventEmitter {
     private connection : Connection;
     private hsc : HeaderSetConsolidator;
     private specification: Specification;
-    private accessoriesInitialized: boolean = false;
-    private accessories: Map<string, PlatformAccessory> = new  Map<string, PlatformAccessory> ();
+    private accessoriesInitialized = false;
+    private accessories: Map<string, PlatformAccessory> = new Map<string, PlatformAccessory> ();
     public readonly id: string;
 
 
     constructor(
         public readonly platform: ResolVBusPlatform,
-        config
-        ) {
+        config,
+    ) {
         super();
-        this.id = config?.name + ' (' + (config.connectionOptions?.host || config.connectionOptions?.path) + ')'
+        this.id = config?.name + ' (' + (config.connectionOptions?.host || config.connectionOptions?.path) + ')';
         this.log = platform.log;
         this.log.debug('Starting VBus Server:', this.id);
 
@@ -46,12 +44,14 @@ export class vbusServer extends EventEmitter {
         this.hsc = new HeaderSetConsolidator({
             interval: 10 * 1000,
         });
-        
+
         this.connection.on('packet', (packet) => {
             this.hsc.addHeader(packet);
         });
 
-        this.hsc.on('headerSet', (headerSet) => { this.CheckHeaderSet(); });
+        this.hsc.on('headerSet', (/*headerSet*/) => {
+            this.CheckHeaderSet();
+        });
 
     }
 
@@ -74,18 +74,17 @@ export class vbusServer extends EventEmitter {
 
         data.forEach(val => {
             if (val.packetFieldSpec?.type?.unit?.unitFamily === 'Temperature') {
-//        this.log.debug('Temperature:', JSON.stringify(val, null, 4));
-//            if (val['packetSpec']['packetFields']['type']['unit']['unitFamily'] === 'Temperature') {
-            
+            //this.log.debug('Temperature:', JSON.stringify(val, null, 4));
+            //if (val['packetSpec']['packetFields']['type']['unit']['unitFamily'] === 'Temperature') {
+
                 this.log.debug('%s: Adding temperature sensor: ', this.id, val.name);
                 new vBusTemperatureSensor(this, {
-                        serverID: this.id,
-                        accessoryID: val.id,
-                        name: val.name,
-                        value: val.rawValue,
-                        type: 'temperatureSensor'
-                    }, {}
-                );
+                    serverID: this.id,
+                    accessoryID: val.id,
+                    name: val.name,
+                    value: val.rawValue,
+                    type: 'temperatureSensor',
+                }, {});
             } else {
                 this.log.debug('%s: Skipping accessory:', this.id, val.name);
             }
@@ -94,7 +93,7 @@ export class vbusServer extends EventEmitter {
         for (const [uuid, acc] of this.accessories) {
             this.log.info('%s: Removing unused accessory:', this.id, acc.context.device?.name || uuid);
             this.platform.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [acc]);
-          }
+        }
     }
 
     getAccessory(uuid: string) : PlatformAccessory | undefined {
@@ -106,8 +105,7 @@ export class vbusServer extends EventEmitter {
         return acc;
     }
 
-    private CheckHeaderSet()
-    {
+    private CheckHeaderSet() {
         const pffh = this.specification.getPacketFieldsForHeaders(this.hsc.getSortedHeaders());
 
         if (!pffh.length) {

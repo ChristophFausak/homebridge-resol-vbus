@@ -1,5 +1,4 @@
 {
-  "private": true,
   "displayName": "RESOL VBus",
   "name": "homebridge-resol-vbus",
   "version": "0.2.0",
