@@ -2,7 +2,7 @@ import EventEmitter from 'events';
 import { Logger, PlatformAccessory } from 'homebridge';
 import { ResolVBusPlatform } from './platform';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { vBusTemperatureSensor } from './accessory';
+import { vBusTemperatureSensor, vBusFan } from './accessory';
 
 import {
     HeaderSetConsolidator,
@@ -68,14 +68,9 @@ export class vbusServer extends EventEmitter {
     private initializeAccessories(data) {
         this.log.debug('Initializing accessories for', this.id);
 
-        if (this.id === 'Solar (10.1.1.21)') {
-            this.log.debug('data:', data);
-        }
-
         data.forEach(val => {
             if (val.packetFieldSpec?.type?.unit?.unitFamily === 'Temperature') {
-            //this.log.debug('Temperature:', JSON.stringify(val, null, 4));
-            //if (val['packetSpec']['packetFields']['type']['unit']['unitFamily'] === 'Temperature') {
+                //this.log.debug('data:', val.packetFieldSpec?.type?.unit);
 
                 this.log.debug('%s: Adding temperature sensor: ', this.id, val.name);
                 new vBusTemperatureSensor(this, {
@@ -85,8 +80,21 @@ export class vbusServer extends EventEmitter {
                     value: val.rawValue,
                     type: 'temperatureSensor',
                 }, {});
+            } else if (val.packetFieldSpec?.type?.unit?.unitId === 'Percent') {
+                this.log.debug('%s: Adding Fan accessory for pump outlet: ', this.id, val.name);
+                new vBusFan(this, {
+                    serverID: this.id,
+                    accessoryID: val.id,
+                    name: val.name,
+                    value: val.rawValue,
+                    type: 'fan-pump',
+                }, {});
             } else {
                 this.log.debug('%s: Skipping accessory:', this.id, val.name);
+
+                // if (this.id === 'Solar (10.1.1.21)') {
+                //    this.log.debug('data:', val.packetFieldSpec?.type?.unit);
+                // }
             }
 
         });

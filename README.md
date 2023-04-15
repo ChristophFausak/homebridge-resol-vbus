@@ -4,13 +4,10 @@
 
 </p>
 
-# Project state
-### This project is in an early development state.
-Currently, the plugin adds only Temperature sensors as accessories.
-
 # Homebridge plugin for RESOL VBus Controllers
 [![npm version](https://img.shields.io/npm/v/homebridge-resol-vbus?style=flat-square)](https://www.npmjs.com/package/homebridge-resol-vbus)
 [![Issues Status](https://img.shields.io/github/issues/ChristophFausak/homebridge-resol-vbus?style=flat-square)](https://github.com/ChristophFausak/homebridge-resol-vbus/issues)
+[![License](https://img.shields.io/npm/l/homebridge-resol-vbus.svg)](http://opensource.org/licenses/Apache-2.0)
 
 This is a plugin for [Homebridge](https://github.com/homebridge/homebridge).
 It allows you to connect [RESOL](https://www.resol.de) VBus solar and system controllers.
@@ -29,4 +26,12 @@ sudo npm install -g homebridge-resol-vbus
 ## Configuration
 
 Use the Homebridge UI to configure the plugin
+
+## Changes
+
+### v1.0.0
+Add pump outlets as fan accessory
+
+### v0.2.0
+Currently, the plugin adds only Temperature sensors as accessories.
 

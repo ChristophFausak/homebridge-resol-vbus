@@ -1,7 +1,7 @@
 {
   "displayName": "RESOL VBus",
   "name": "homebridge-resol-vbus",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "Adapter to RESOL VBus based solar and system controllers.",
   "license": "Apache-2.0",
   "repository": {
@@ -23,7 +23,7 @@
     "prepublishOnly": "npm run lint && npm run build"
   },
   "keywords": [
-    "homebridge-plugin"
+    "homebridge-plugin", "VBus", "Resol"
   ],
   "dependencies": {
     "resol-vbus": "^0.25.0"
