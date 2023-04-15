@@ -116,14 +116,15 @@ export class vBusFan {
     }
 
     updateData(data) {
-        let val = Number(data);
-        if (val !== this.value)
-        {
+        const val = Number(data);
+        if (val !== this.value) {
             this.server.log.debug('Server %s - pump outlat %s new value:',
                 this.data.serverID, this.accessory.displayName, val);
 
             this.onCharacteristic.updateValue(val > 0);
-            this.activeCharacteristic.updateValue((val > 0) ? this.server.platform.api.hap.Characteristic.Active.ACTIVE : this.server.platform.api.hap.Characteristic.Active.INACTIVE);
+            this.activeCharacteristic.updateValue((val > 0) ?
+                this.server.platform.api.hap.Characteristic.Active.ACTIVE
+                : this.server.platform.api.hap.Characteristic.Active.INACTIVE);
             this.rotationCharacteristic.updateValue(val);
 
             this.value = val;
