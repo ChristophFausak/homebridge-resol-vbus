@@ -130,6 +130,8 @@ export class vbusServer extends EventEmitter {
         pffh.forEach(val => {
             if (val.packetFieldSpec?.type?.unit?.unitFamily === 'Temperature') {
                 this.emit(val.id, val.rawValue);
+            } else if (val.packetFieldSpec?.type?.unit?.unitId === 'Percent') {
+                this.emit(val.id, val.rawValue);
             }
         });
     }

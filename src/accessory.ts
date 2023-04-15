@@ -109,6 +109,7 @@ export class vBusFan {
     }
 
     readonlyCharacteristic() {
+        this.value = -1;
         throw new this.server.platform.api.hap.HapStatusError(this.server.platform.api.hap.HAPStatus.READ_ONLY_CHARACTERISTIC);
     }
 
