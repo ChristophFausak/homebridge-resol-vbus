@@ -64,18 +64,9 @@ export class vBusTemperatureSensor {
 export class vBusFan {
     private service: Service;
     private onCharacteristic: Characteristic;
-    private activeCharacteristic: Characteristic;
     private rotationCharacteristic: Characteristic;
     private accessory: PlatformAccessory;
     private value;
-
-    /**
-     * These are just used to create a working example
-     * You should implement your own code to track the state of your accessory
-     */
-    private accessoryStates = {
-        Active: this.server.platform.api.hap.Characteristic.Active.INACTIVE,
-    };
 
     constructor(
         private readonly server: vbusServer,
@@ -107,24 +98,27 @@ export class vBusFan {
         || this.accessory.addService(this.server.platform.Service.Fan);
 
         this.onCharacteristic = this.service.getCharacteristic(this.server.platform.Characteristic.On);
-        this.activeCharacteristic = this.service.getCharacteristic(this.server.platform.Characteristic.Active);
         this.rotationCharacteristic = this.service.getCharacteristic(this.server.platform.Characteristic.RotationSpeed);
+
+        this.onCharacteristic.onSet(this.readonlyCharacteristic.bind(this));
+        this.rotationCharacteristic.onSet(this.readonlyCharacteristic.bind(this));
 
         this.updateData(data.value);
 
         server.on(data.accessoryID, this.updateData.bind(this));
     }
 
+    readonlyCharacteristic() {
+        throw new this.server.platform.api.hap.HapStatusError(this.server.platform.api.hap.HAPStatus.READ_ONLY_CHARACTERISTIC);
+    }
+
     updateData(data) {
         const val = Number(data);
         if (val !== this.value) {
-            this.server.log.debug('Server %s - pump outlat %s new value:',
+            this.server.log.debug('Server %s - pump outlet %s new value:',
                 this.data.serverID, this.accessory.displayName, val);
 
             this.onCharacteristic.updateValue(val > 0);
-            this.activeCharacteristic.updateValue((val > 0) ?
-                this.server.platform.api.hap.Characteristic.Active.ACTIVE
-                : this.server.platform.api.hap.Characteristic.Active.INACTIVE);
             this.rotationCharacteristic.updateValue(val);
 
             this.value = val;
