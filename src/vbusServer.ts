@@ -61,8 +61,14 @@ export class vbusServer extends EventEmitter {
 
     async launchFinished() {
         this.log.debug('launchFinished: Starting timer');
-        await this.connection.connect();
-        this.hsc.startTimer();
+        await this.connection.connect()
+            .then( ()=>{
+                this.log.debug('launchFinished: Starting timer');
+                this.hsc.startTimer();
+            })
+            .catch((err) => {
+                this.log.error('launchFinished:', this.id, 'Failed to connect:', err.message);
+            });
     }
 
     private initializeAccessories(data) {
